@@ -1,0 +1,48 @@
+---
+
+- name: Disable password login SSH
+  lineinfile:
+    dest: "/etc/ssh/sshd_config"
+    regexp: "^PasswordAuthentication"
+    line: "PasswordAuthentication yes"
+  notify: "Restart sshd"
+
+- name: Set 3 auth tries to login SSH
+  lineinfile:
+    dest: "/etc/ssh/sshd_config"
+    regexp: "^MaxAuthTries"
+    line: "MaxAuthTries 3"
+  notify: "Restart sshd"
+
+
+- name: Create user to login in SSH with password #for emergency cases
+  user:
+    name: "{{ssh_password_login_user}}"
+    password: "{{ssh_user_passwork}}"
+  no_log: True
+  #TODO change root password?
+
+
+- name: Allow root and {{ssh_password_login_user}} to use SSH
+  lineinfile:
+    dest: "/etc/ssh/sshd_config"
+    regexp: "^AllowUsers"
+    line: "AllowUsers root {{ssh_password_login_user}}"
+  notify: "Restart sshd"
+
+
+- name: Disable root password login SSH
+  lineinfile:
+    dest: "/etc/ssh/sshd_config"
+    regexp: "^PermitRootLogin"
+    line: "PermitRootLogin prohibit-password"
+  notify: "Restart sshd"
+
+
+
+- name: Setup alternate SSH port
+  lineinfile:
+    dest: "/etc/ssh/sshd_config"
+    regexp: "^Port"
+    line: "Port {{ configured_port }}"
+  notify: "Restart sshd"

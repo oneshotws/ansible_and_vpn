@@ -1,0 +1,86 @@
+
+#TODO create and login as user and elavete to root
+- name: Apply common configuration to all nodes
+  hosts: all
+  remote_user: root
+  gather_facts: no
+  roles:
+    - common
+
+
+
+
+
+
+- name: Configure and deploy the balancer
+  hosts: balancer-server
+  remote_user: root
+  roles:
+    - nginx
+    - keepalived
+
+
+
+
+
+- name: Configure and deploy the hugo webservers
+  hosts: web-servers
+  remote_user: root
+  roles:
+    - docker
+
+
+
+
+
+- name: Configure and deploy the hugo webservers
+  hosts: hugo-web-server
+  remote_user: root
+  roles:
+    #- docker
+    - hugo
+
+
+- name: Configure and deploy the nextcloud webservers
+  hosts: nextcloud-web-server
+  remote_user: root
+  roles:  #TODO dont run if already runned
+    - nextcloud
+
+
+
+- name: Configure and deploy the email webservers
+  hosts: email-web-server
+  remote_user: root
+  roles:
+    - email
+
+
+- name: Configure and deploy the matrix webservers
+  hosts: matrix-web-server
+  remote_user: root
+  roles:
+    - matrix
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

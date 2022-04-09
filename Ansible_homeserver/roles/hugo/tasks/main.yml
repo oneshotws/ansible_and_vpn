@@ -1,0 +1,54 @@
+---
+# tasks file for hugo
+
+- name: Install Docker!
+  include_role:
+    name: docker
+  when: ansible_facts.services['docker.service'] is not defined
+  run_once: true
+
+#TODO Change me to 'Mount SAN folder'
+- name: Copy site
+  copy:
+    src: hugo
+    dest: /srv/
+    #unsafe_writes: yes
+
+#- name: Copy docker container build files
+  #copy:
+    #src: docker-hugo
+    #dest: /srv/
+
+#- name: Copy docker-compose config file
+  #template:
+    #src: docker-compose.yml.j2
+    #dest: /srv/docker-hugo/docker-compose.yml
+
+
+#- name: Down existing docker container
+  #community.docker.docker_compose:
+    #project_src: /srv/docker-hugo
+    #state: absent
+
+#TODO rebuild based on changes in container files
+#- name: Rebuild and start services
+  #community.docker.docker_compose:
+    #project_src: /srv/docker-hugo/
+    #build: yes
+    ##register: output
+
+
+
+- name: Create hugo container
+  docker_container:
+    name: hugo
+    image: klakegg/hugo
+    state: started
+    command: server
+    recreate: yes
+    restart_policy: always
+    ports:
+    - "{{ hugo_http_port }}:1313"
+    volumes:
+    - /srv/hugo:/src
+

@@ -1,0 +1,79 @@
+---
+# tasks file for nginx
+#TODO change 502 bad gateway webpage and 504
+#TODO make modular template for site (with additional sites by service)
+- name: Install latest NGINX version
+  package: name=nginx state=latest
+  notify:
+  - Restart nginx
+
+
+#- name: Delete default nginx vhost
+  #file: path=/etc/nginx/sites-aviable/default  state=absent
+
+- name: Delete default nginx vhost symlink
+  file: path=/etc/nginx/sites-enabled/default state=absent
+
+
+- name: Copy {{ site }} servers file
+  template:
+    src: servers.conf.j2
+    dest: /etc/nginx/conf.d/servers_{{ site }}.conf
+  notify:
+  - Restart nginx
+
+- name: Copy {{ site }} config file
+  template:
+    src: hugo_nextcloud.conf.j2
+    dest: /etc/nginx/sites-available/{{ site }}
+  notify:
+  - Restart nginx
+
+
+
+
+- name: Create symlink nginx vhost
+  file: src=/etc/nginx/sites-available/{{ site }} dest=/etc/nginx/sites-enabled/{{ site }} state=link
+  notify:
+  - Restart nginx
+
+
+#- name: Configure nextcloud reverse proxy
+  #template:
+    #src: nextcloud.conf.j2
+    #dest: /etc/nginx/sites-enabled/nextcloud.example.com
+  #notify:
+  #- Restart nginx
+
+
+- name: Create keys directory
+  file:
+    path: /srv/keys
+    state: directory
+
+
+- name: Copy key with owner and permissions
+  ansible.builtin.copy:
+    src: server.crt
+    dest: /srv/keys/server.crt
+    owner: root
+    group: root
+    mode: '0400'
+  notify:
+  - Restart nginx
+
+- name: Copy certificate with owner and permissions
+  ansible.builtin.copy:
+    src: server.key
+    dest: /srv/keys/server.key
+    owner: root
+    group: root
+    mode: '0400'
+  notify:
+  - Restart nginx
+
+
+- name: Check working NGINX
+  service:
+    name: nginx
+    state: started

@@ -1,0 +1,14 @@
+---
+# handlers file for common
+- name: Restart sshd
+  service:
+    name: sshd
+    state: restarted
+
+
+#- name: restart docker with error
+  #service:
+    #name: docker
+    #state: restarted
+
+

@@ -1,0 +1,33 @@
+---
+# tasks file for keepalived
+
+- name: Install package
+  package: name=keepalived state=latest
+  #run_once: true
+
+
+- name: set_fact | figure out network device of private network
+  set_fact:
+    private_interface: "{{ hostvars[inventory_hostname]['ansible_' + item]['device'] }}"
+  when:
+    - hostvars[inventory_hostname]['ansible_' + item].ipv4 is defined
+    - hostvars[inventory_hostname]['ansible_' + item]['ipv4']['address'] | ipaddr('{{ansible_default_ipv4.address}}/24')
+  with_items: "{{ ansible_interfaces }}"
+
+  #TODO do smth with it (like alternative ip) ALSO as alternative - static ips thou fuss configuring it on Host, OR AUTOMATE IT IATHER!
+- name: I'm in danger
+  debug:
+    msg: System {{ inventory_hostname }} has ip {{ ansible_default_ipv4.address }} on interface {{private_interface}}. Next operation pretty dangerous due to loosing connection
+
+- name: Copy config, # if we don't have VIP as connecting address
+  template:
+    src: keepalived.conf.j2
+    dest: /etc/keepalived/keepalived.conf
+  #run_once: true
+  when: ansible_default_ipv4.address != VIP1_keepalive  #TODO check this config out, seems pretty cool
+  notify:
+  - restart keepalived
+
+
+
+  #TODO https://habr.com/ru/post/524688/ lvl2!  balancing! (balance nginx'es load, nginx'es balances load no web servers xd)

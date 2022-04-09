@@ -1,0 +1,15 @@
+# {{site}}
+upstream hugo-01 {
+		{% for host in groups['hugo-web-server'] %}
+        server {{ hostvars[host]['ansible_facts']['nodename'] }}:{{hugo_http_port}};
+        {% endfor %}
+
+    }
+
+# {{site}}
+upstream nextcloud-01 {
+		{% for host in groups['nextcloud-web-server'] %}
+        server {{ hostvars[host]['ansible_facts']['nodename'] }}:{{nextcloud_http_port}};
+        {% endfor %}
+
+    }

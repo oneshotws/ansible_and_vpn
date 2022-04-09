@@ -1,0 +1,19 @@
+version: "3.8"
+
+
+services:
+    hugo:
+        build: .
+        volumes:
+            - /srv/hugo:/src
+            - ./output/:/output
+        environment:
+            #- HUGO_REFRESH_TIME=3600
+            #- HUGO_THEME={{hugo_theme}}
+            - HUGO_BASEURL={{site}}
+        restart: always
+        ports:
+         - {{hugo_http_port}}:1313
+
+
+

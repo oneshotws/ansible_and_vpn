@@ -1,0 +1,30 @@
+---
+
+#TODO use variables to dev and working group
+
+
+ansible_port: 8456 #SSH
+
+
+VIP1_keepalive: 192.168.122.128
+
+
+site: "example.com"
+
+
+
+
+
+
+https_port: 443
+http_port: 80
+
+#hugo_https_port: 443
+hugo_http_port: 1001
+hugo_theme: "atlanta" #TODO ??? Why
+
+
+#nextcloud_https_port: 443
+nextcloud_http_port: 1002
+
+

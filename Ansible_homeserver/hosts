@@ -1,0 +1,30 @@
+[balancer-server]
+192.168.122.224 keepalived_state="MASTER" keepalived_priority=100
+192.168.122.97 keepalived_state="BACKUP" keepalived_priority=50
+192.168.122.215 keepalived_state="BACKUP" keepalived_priority=80
+#TODO make weight vars for nginx-balancer
+
+
+[nextcloud-web-server]
+192.168.122.97
+192.168.122.230
+
+[hugo-web-server]
+192.168.122.97
+192.168.122.230
+
+[email-web-server]
+192.168.122.97
+192.168.122.230
+
+[matrix-web-server]
+192.168.122.97
+192.168.122.230
+
+
+
+[web-servers:children]  #TODO probably better way to install web-site-server to all hosts at once and use it with balancer #what?
+matrix-web-server
+email-web-server
+hugo-web-server
+nextcloud-web-server

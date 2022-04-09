@@ -1,0 +1,168 @@
+---
+# tasks file for common
+#TODO ssh stuf to specific tasks list
+#########################################################################################################
+
+
+- include_tasks: ssh.yml
+
+
+#TODO check working fail2ban
+
+#TODO Nft block access to all incoming connections except allowed. Outgoing connections iether?
+#TODO portknocking SSH  https://wiki.archlinux.org/title/Port_knocking#With_nftables_only
+
+#TODO up yggdrasil site server pretty easy thou
+#TODO up yggdrasil node???
+
+#TODO config access to ssh only in interface SO THERE COMES TROUBLES WITH configs, since keepalived need interface to interact
+
+#- name: "pacman -Su"
+  #community.general.pacman:
+    #upgrade: yes
+    #ignore_errors: yes
+
+
+#- name: "apt update"
+  #apt:
+    #update_cache: yes
+    #cache_valid_time: 3600
+    #ignore_errors: yes
+
+
+- name: Install packages
+  tags: packages
+  block:
+
+  - name: Install python on hosts (for ansible)
+    package: name={{item}} state=latest
+    loop:
+    - pip
+    - python
+    - python-pip
+    - python3
+    ignore_errors: yes
+
+  - name: Upgrade all packages to the latest version
+    package:
+      name: "*"
+      state: latest
+
+  #TODO tag not for production
+  - name: Install quality of life tools
+    package: name={{item}} state=latest
+    loop:
+    - micro
+    - sudo   # love you debian
+    - fish
+    - net-tools  # 'netstat -tulnap'
+    ignore_errors: yes
+
+  - name: install fail2ban
+    package: name=fail2ban state=latest
+    #notify:
+    #- restart fail2ban
+
+
+
+#- name: Stop docker since we gonna mess with nftable
+  #service:
+    #name: docker
+    #state: stopped
+  #when: ansible_facts.services['docker.service'] is defined
+
+
+
+# promising, but breaks docker for some reason
+#- name: Testing nftables #RESTART DOCKER!!!
+  #vars:
+    #nft_input_rules:
+      #400 input http accepted:
+        #- tcp dport { "{{http_port}}", "{{https_port}}", "{{hugo_http_port}}" , "{{ansible_port}}", "{{nextcloud_http_port}}", 514, 53, 111 } ct state new accept #yggdrasil uses 9001 port for listening
+    #nft_output_rules:
+      #400 output http accepted:
+        #- tcp dport { "{{http_port}}", "{{https_port}}", "{{hugo_http_port}}" , "{{ansible_port}}", "{{nextcloud_http_port}}", 514, 53, 111 } ct state new accept #TODO make it not that bad
+  ##register: change_in_nftable
+  #include_role:
+    #name: nftables
+  #notify:
+  #- restart docker with error
+
+#- name: Ensure nftables is reloaded if need be
+  #meta: flush_handlers
+
+
+#- name: Run deferred setup to gather facts again
+  #setup:
+
+#- name: restart docker
+  #service:
+    #name: docker
+    #state: started
+    #enabled: yes
+  #ignore_errors: yes
+
+  #TODO set static IP for each host + dynamic + keepalived
+
+- name: Configure fail2ban
+  copy:
+    src: jail.local
+    dest: /etc/fail2ban/jail.local
+  #notify:
+  #- restart fail2ban
+
+- name: Configure nftables  #TODO make specific tables for roles (modular)
+  template:
+    src: nftables.conf.j2
+    dest: /etc/nftables.conf
+  #notify:
+  #- restart fail2ban
+
+- name: restart nftables
+  service:
+    name: nftables
+    state: restarted
+    enabled: yes
+
+
+- name: restart fail2ban
+  service:
+    name: fail2ban
+    state: restarted
+    enabled: yes
+
+- name: restart docker testing
+  service:
+    name: docker
+    state: restarted
+    enabled: yes
+  ignore_errors: yes
+  #when: ansible_facts.services['docker.service'] is defined
+  #when: change_in_nftable is defined
+
+
+
+
+#TODO then maybe enable password auth to 1 user? for emergency scenarious
+
+
+
+
+
+- name: Create srv directory
+  file:
+    path: /srv
+    state: directory
+
+- name: Update the /etc/hosts file with node names
+  lineinfile:
+    path: "/etc/hosts"
+    regexp: ".*\t{{ hostvars[item]['ansible_hostname']}}\t{{ hostvars[item]['ansible_hostname']}}"
+    line: "{{ hostvars[item]['ansible_env'].SSH_CONNECTION.split(' ')[2] }}\t{{ hostvars[item]['ansible_hostname']}}\t{{ hostvars[item]['ansible_hostname']}}"
+    state: present
+    backup: yes
+  register: etchostsupdate
+  when: ansible_hostname != "{{ item }}" or ansible_hostname == "{{ item }}"
+  with_items: "{{groups['all']}}"
+
+

@@ -1,0 +1,34 @@
+global_defs {
+    router_id master_node # naming this node
+}
+
+vrrp_script check_nginx {
+    script "pidof nginx" # success when script returns 0; otherwise failed
+    interval 1 # call script interval 2 second
+    weight -20
+    fall 3 # if failed for 3 times, set priority += weight, which means 100-20=80 here
+}
+
+vrrp_instance VI_1 {
+    state {{keepalived_state}}
+    interface {{ private_interface }} # binding virtual IP to
+
+    virtual_router_id 50 # must be identical to backup
+    mcast_src_ip {{ ansible_default_ipv4.address }} # IP of this node
+    priority {{keepalived_priority}} # master 100-20=80 must be less than backup priority 90
+    advert_int 1 # advert interval 1 second
+
+    track_script {
+        check_nginx
+    }
+
+    authentication {
+        auth_type PASS
+        auth_pass M7*t&Gv5
+    }
+
+
+    virtual_ipaddress {
+        {{VIP1_keepalive}}/24 # virtual IP
+    }
+}

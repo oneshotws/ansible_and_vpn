@@ -1,0 +1,31 @@
+version: '2'
+
+
+
+services:
+  db:
+    image: postgres
+    restart: always
+    hostname: 'nc-postgres'  # AND HERE
+    volumes:
+      - ./postgres-data:/var/lib/postgresql/data
+    environment:
+      - POSTGRES_DB=nextcloud_db
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD={{postgress_pass}}
+#TODO use secrets
+
+  app:
+    image: nextcloud
+    restart: always
+    links:
+      - db
+    volumes:
+      - /srv/nextcloud:/var/www/html
+    environment:
+      - POSTGRES_HOST=nc-postgres  # HERE
+      - POSTGRES_DB=nextcloud_db
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD={{postgress_pass}}
+    ports:
+      - {{ nextcloud_http_port }}:80

@@ -1,0 +1,72 @@
+---
+# tasks file for nextcloud
+
+- name: Install Docker!
+  include_role:
+    name: docker
+  when: ansible_facts.services['docker.service'] is not defined
+  run_once: true
+
+#TODO Change me to 'Mount SAN folder'
+- name: Copy nextcloud data
+  copy:
+    src: nextcloud
+    dest: /srv/
+
+#TODO Change me to 'Mount SAN folder'
+- name: Copy nextcloud's database
+  copy:
+    src: db
+    dest: /srv/
+
+
+- name: Copy docker container build files
+  copy:
+    src: docker-nextcloud
+    dest: /srv/
+
+
+- name: Copy docker-compose config file
+  template:
+    src: docker-compose.yml.j2
+    dest: /srv/docker-nextcloud/docker-compose.yml
+
+
+
+- name: Down existing docker container
+  community.docker.docker_compose:
+    project_src: /srv/docker-nextcloud/
+    state: absent
+
+#TODO rebuild based on changes in container file
+- name: Rebuild and start services
+  community.docker.docker_compose:
+    project_src: /srv/docker-nextcloud/
+    build: yes
+    #register: output
+
+
+#- name: Create nextcloud container
+  #docker_container:
+    #name: nextcloud
+    #image: nextcloud:fpm
+    #state: started
+    #command: server
+    #recreate: yes
+    #ports:
+    #- "{{ nextcloud_http_port }}:80"
+    ##volumes:
+    ##- /srv/nextcloud:/var/www/html
+
+
+#- name: Create nextcloud container
+  #docker_container:
+    #name: nextcloud
+    #image: nextcloud:fpm
+    #state: started
+    #command: server
+    #recreate: yes
+    #ports:
+    #- "{{ nextcloud_http_port }}:80"
+    ##volumes:
+    ##- /srv/nextcloud:/var/www/html
