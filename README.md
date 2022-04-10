@@ -8,3 +8,4 @@ ansible-vault edit ./secrets_1.enc
 
 ansible-vault encrypt ./secrets.enc
 
+https://www.petenetlive.com/KB/Article/0001399
